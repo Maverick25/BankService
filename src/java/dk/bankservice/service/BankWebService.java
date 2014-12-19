@@ -5,15 +5,12 @@
  */
 package dk.bankservice.service;
 
-import com.google.gson.Gson;
-import dk.bankservice.facade.Controller;
+import dk.bankservice.controller.CalculateQuote;
+import java.io.IOException;
 import javax.jws.WebService;
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.ejb.Stateless;
-import javax.json.JsonObject;
-import javax.xml.ws.RequestWrapper;
-import javax.xml.ws.ResponseWrapper;
 
 /**
  *
@@ -21,25 +18,19 @@ import javax.xml.ws.ResponseWrapper;
  */
 @WebService(serviceName = "BankWebService")
 @Stateless()
-public class BankWebService {
-
-    private Controller controller;
-    
-    public BankWebService()
-    {
-        controller = new Controller();
-    }
+public class BankWebService 
+{
 
     /**
      * Web service operation
-     * @param gsonInput
-     * @return 
+     * @param loanRequestString
+     * @throws java.io.IOException
+     * @throws java.lang.InterruptedException
      */
-    @WebMethod(operationName = "sendQuote")
-    @RequestWrapper(className = "dk.sendQuote_1")
-    @ResponseWrapper(className = "dk.sendQuote_1Response")
-    public String sendQuote(@WebParam(name = "gsonInput") JsonObject jsonInput) 
+    @WebMethod(operationName = "calculateQuotes")
+    public void calculateQuotes(@WebParam(name = "loanRequestString") String loanRequestString) throws IOException, InterruptedException 
     {
-        return controller.sendQuote(jsonInput);
+        CalculateQuote.receiveMessages();
     }
+
 }
