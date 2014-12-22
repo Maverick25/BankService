@@ -5,12 +5,13 @@
  */
 package dk.bankservice.service;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
 import dk.bankservice.controller.CalculateQuote;
 import java.io.IOException;
 import javax.jws.WebService;
 import javax.jws.WebMethod;
-import javax.jws.WebParam;
 import javax.ejb.Stateless;
+import javax.jws.WebParam;
 
 /**
  *
@@ -23,14 +24,15 @@ public class BankWebService
 
     /**
      * Web service operation
-     * @param loanRequestString
+     * @param request
+     * @param props
      * @throws java.io.IOException
-     * @throws java.lang.InterruptedException
      */
-    @WebMethod(operationName = "calculateQuotes")
-    public void calculateQuotes(@WebParam(name = "loanRequestString") String loanRequestString) throws IOException, InterruptedException 
+    @WebMethod(operationName = "generateQuote")
+    public void generateQuote(@WebParam(name = "request") String request, @WebParam(name = "props") BasicProperties props) throws IOException 
     {
-        CalculateQuote.receiveMessages();
+        CalculateQuote.calculateInterest(request, props);
     }
-
+    
+    
 }

@@ -7,14 +7,10 @@ package dk.bankservice.controller;
 
 import com.google.gson.Gson;
 import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.QueueingConsumer;
 import dk.bankservice.dto.LoanRequestDTO;
 import dk.bankservice.dto.LoanResponseDTO;
-import dk.bankservice.messaging.Receive;
 import dk.bankservice.messaging.Send;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -25,42 +21,29 @@ public class CalculateQuote
 {
     private static Gson gson;
     
-    public static void receiveMessages() throws IOException,InterruptedException
+    public static void calculateInterest(String input,AMQP.BasicProperties props) throws IOException
     {
         gson = new Gson();
-        
-        HashMap<String,Object> objects = Receive.setUpReceiver();
-        
-        QueueingConsumer consumer = (QueueingConsumer) objects.get("consumer");
-        Channel channel = (Channel) objects.get("channel");
         
         LoanRequestDTO loanRequestDTO;
         LoanResponseDTO loanResponseDTO;
         
-        while (true) 
-        {
-          QueueingConsumer.Delivery delivery = consumer.nextDelivery();
-          String message = new String(delivery.getBody());
+//        AMQP.BasicProperties props = delivery.getProperties();
+        AMQP.BasicProperties replyProps = new AMQP.BasicProperties.Builder().correlationId(props.getCorrelationId()).replyTo(props.getReplyTo()).build();
+
+        loanRequestDTO = gson.fromJson(input, LoanRequestDTO.class);
+
+        double interestRate = new Random().nextDouble()*20;
+
+        loanResponseDTO = new LoanResponseDTO(interestRate, loanRequestDTO.getSsn());
+
+        System.out.println(loanResponseDTO.toString());
+
+        sendMessage(loanResponseDTO,replyProps);
           
-          AMQP.BasicProperties props = delivery.getProperties();
-          AMQP.BasicProperties replyProps = new AMQP.BasicProperties.Builder().correlationId(props.getCorrelationId()).replyTo(props.getReplyTo()).build();
-          
-          loanRequestDTO = gson.fromJson(message, LoanRequestDTO.class);
-          
-          double interestRate = new Random().nextDouble()*20;
-          
-          loanResponseDTO = new LoanResponseDTO(interestRate, loanRequestDTO.getSsn());
-          
-          System.out.println(loanResponseDTO.toString());
-          
-          sendMessage(loanResponseDTO,replyProps);
-          
-          channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-        }
-        
     }
     
-    public static void sendMessage(LoanResponseDTO dto, AMQP.BasicProperties props) throws IOException
+    public static void sendMessage(LoanResponseDTO dto, AMQP.BasicProperties props) throws IOException 
     {
         String message = gson.toJson(dto);
         
