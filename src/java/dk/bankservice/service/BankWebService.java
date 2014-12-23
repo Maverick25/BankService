@@ -7,6 +7,7 @@ package dk.bankservice.service;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import dk.bankservice.controller.CalculateQuote;
+import dk.bankservice.dto.LoanRequestDTO;
 import java.io.IOException;
 import javax.jws.WebService;
 import javax.jws.WebMethod;
@@ -26,12 +27,22 @@ public class BankWebService
      * Web service operation
      * @param request
      * @param props
-     * @throws java.io.IOException
+     * @return 
      */
     @WebMethod(operationName = "generateQuote")
-    public void generateQuote(@WebParam(name = "request") String request, @WebParam(name = "props") BasicProperties props) throws IOException 
+    public boolean generateQuote(@WebParam(name = "request") String request, @WebParam(name = "props") String props)
     {
-        CalculateQuote.calculateInterest(request, props);
+        try
+        {
+            CalculateQuote.calculateInterest(request, props);
+            return true;
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+        
     }
     
     
